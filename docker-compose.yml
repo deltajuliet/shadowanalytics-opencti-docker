@@ -92,7 +92,7 @@ services:
       - opencti
     deploy:
       mode: replicated
-      replicas: 3
+      replicas: 7
     restart: always
   connector-export-file-stix:
     image: opencti/connector-export-file-stix:6.0.9
@@ -174,7 +174,7 @@ services:
     image: opencti/connector-abuse-ssl:6.0.9
     environment:
       - OPENCTI_URL=http://opencti:8080
-      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - OPENCTI_TOKEN=
       - CONNECTOR_ID=c8e5f1c6-266b-49db-baa5-02e011533e73
       - "CONNECTOR_NAME=Abuse.ch SSL Blacklist"
       - CONNECTOR_SCOPE=abusessl
@@ -189,30 +189,32 @@ services:
     image: opencti/connector-abuseipdb-ipblacklist:6.0.9
     environment:
       - OPENCTI_URL=http://opencti:8080
-      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - OPENCTI_TOKEN=KEYNEEDED
       - CONNECTOR_ID=a6a43a19-606e-4c7b-ae72-37b636440d5c
       - "CONNECTOR_NAME=AbuseIPDB IP Blacklist"
       - CONNECTOR_SCOPE=abuseipdb
       - CONNECTOR_CONFIDENCE_LEVEL=80 # From 0 (Unknown) to 100 (Fully trusted)
       - CONNECTOR_LOG_LEVEL=error
       - ABUSEIPDB_URL=https://api.abuseipdb.com/api/v2/blacklist
-      - ABUSEIPDB_API_KEY=bb6acdc95b98285b51c4f64986b22d7637a09dc5d1fbce93e18accbc4b29d7f5bfba0868c6fe8e23
+      - ABUSEIPDB_API_KEY=${APIKEY-ABUSEDB}
       - ABUSEIPDB_SCORE=100
       - ABUSEIPDB_LIMIT=10000
       - ABUSEIPDB_INTERVAL=2 #Day
     restart: always
+    depends_on:
+      - opencti
   connector-alienvault:
     image: opencti/connector-alienvault:6.0.9
     environment:
       - OPENCTI_URL=http://opencti:8080
-      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - OPENCTI_TOKEN=KEYNEEDED
       - CONNECTOR_ID=55799a36-c479-409b-9bc1-947e8e37884b
       - CONNECTOR_NAME=AlienVault
       - CONNECTOR_SCOPE=alienvault
       - CONNECTOR_CONFIDENCE_LEVEL=15 # From 0 (Unknown) to 100 (Fully trusted)
       - CONNECTOR_LOG_LEVEL=error
       - ALIENVAULT_BASE_URL=https://otx.alienvault.com
-      - ALIENVAULT_API_KEY=80a86e2ba0ca66540a8dc878dda0e4968889a7a97c01b0114667a677ce07f1f7
+      - ALIENVAULT_API_KEY=${APIKEY-ALIENVAULT}
       - ALIENVAULT_TLP=White
       - ALIENVAULT_CREATE_OBSERVABLES=true
       - ALIENVAULT_CREATE_INDICATORS=true
@@ -232,7 +234,7 @@ services:
     image: opencti/connector-cisa-known-exploited-vulnerabilities:6.0.9
     environment:
       - OPENCTI_URL=http://opencti:8080
-      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - OPENCTI_TOKEN=KEYNEEDED
       - CONNECTOR_ID=b57a3f08-c6bd-48fb-b929-170e9a8ea27d
       - "CONNECTOR_NAME=CISA Known Exploited Vulnerabilities"
       - CONNECTOR_SCOPE=cisa
@@ -249,7 +251,7 @@ services:
     image: opencti/connector-cve:6.0.9
     environment:
       - OPENCTI_URL=http://opencti:8080
-      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - OPENCTI_TOKEN=KEYNEEDED
       - CONNECTOR_ID=fd000433-7d75-4d32-a001-ea0c74c77db9
       - CONNECTOR_NAME=Common Vulnerabilities and Exposures
       - CONNECTOR_SCOPE=identity,vulnerability
@@ -257,7 +259,7 @@ services:
       - CONNECTOR_RUN_AND_TERMINATE=false
       - CONNECTOR_LOG_LEVEL=error
       - CVE_BASE_URL=https://services.nvd.nist.gov/rest/json/cves
-      - CVE_API_KEY=649a5ae4-5ab0-4beb-ba5b-f315bb7e6fbd # Required
+      - CVE_API_KEY=${APIKEY-CVE} # Required
       - CVE_INTERVAL=2 # Required, in hours advice min 2
       - CVE_MAX_DATE_RANGE=120 # In days, max 120
       - CVE_MAINTAIN_DATA=true # Required, retrieve only updated data
@@ -270,7 +272,7 @@ services:
     image: opencti/connector-cyber-campaign-collection:6.0.9
     environment:
       - OPENCTI_URL=http://opencti:8080
-      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - OPENCTI_TOKEN=KEYNEEDED
       - CONNECTOR_ID=d1b66340-637b-4c14-b92a-0972edc0dbde
       - "CONNECTOR_NAME=APT & Cybercriminals Campaign Collection"
       - CONNECTOR_SCOPE=report
@@ -279,30 +281,30 @@ services:
       - CYBER_MONITOR_GITHUB_TOKEN= # If not provided, rate limit will be very low
       - CYBER_MONITOR_FROM_YEAR=2018
       - CYBER_MONITOR_INTERVAL=4 # In days, must be strictly greater than 1
-    depends_on:
-      - opencti
-    restart: always
-  connector-disarm-framework:
-    image: opencti/connector-disarm-framework:6.0.9
-    environment:
-      - OPENCTI_URL=http://opencti:8080
-      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
-      - CONNECTOR_ID=2b26b90b-a9a3-4b82-a01c-7fd4e6e3cf3f
-      - "CONNECTOR_NAME=DISARM Framework"
-      - CONNECTOR_SCOPE=marking-definition,identity,attack-pattern,course-of-action,intrusion-set,campaign,malware,tool,report,narrative,event,channel
-      - CONNECTOR_CONFIDENCE_LEVEL=75 # From 0 (Unknown) to 100 (Fully trusted)
-      - CONNECTOR_RUN_AND_TERMINATE=false
-      - CONNECTOR_LOG_LEVEL=error
-      - DISARM_FRAMEWORK_URL=https://raw.githubusercontent.com/DISARMFoundation/DISARMframeworks/main/generated_files/DISARM_STIX/DISARM.json
-      - DISARM_FRAMEWORK_INTERVAL=7 # In days, must be strictly greater than 1
     restart: always
     depends_on:
       - opencti
+  # connector-disarm-framework:
+  #   image: opencti/connector-disarm-framework:6.0.9
+  #   environment:
+  #     - OPENCTI_URL=http://opencti:8080
+  #     - OPENCTI_TOKEN=KEYNEEDED
+  #     - CONNECTOR_ID=2b26b90b-a9a3-4b82-a01c-7fd4e6e3cf3f
+  #     - "CONNECTOR_NAME=DISARM Framework"
+  #     - CONNECTOR_SCOPE=marking-definition,identity,attack-pattern,course-of-action,intrusion-set,campaign,malware,tool,report,narrative,event,channel
+  #     - CONNECTOR_CONFIDENCE_LEVEL=75 # From 0 (Unknown) to 100 (Fully trusted)
+  #     - CONNECTOR_RUN_AND_TERMINATE=false
+  #     - CONNECTOR_LOG_LEVEL=error
+  #     - DISARM_FRAMEWORK_URL=https://raw.githubusercontent.com/DISARMFoundation/DISARMframeworks/main/generated_files/DISARM_STIX/DISARM.json
+  #     - DISARM_FRAMEWORK_INTERVAL=7 # In days, must be strictly greater than 1
+  #   restart: always
+  #   depends_on:
+  #     - opencti
   connector-malwarebazaar-recent-additions:
     image: opencti/connector-malwarebazaar-recent-additions:6.0.9
     environment:
       - OPENCTI_URL=http://opencti:8080
-      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - OPENCTI_TOKEN=KEYNEEDED
       - CONNECTOR_ID=6f5061c2-833f-4649-a3ed-159b67f5cf31
       - "CONNECTOR_NAME=MalwareBazaar Recent Additions"
       - CONNECTOR_CONFIDENCE_LEVEL=50 # From 0 (Unknown) to 100 (Fully trusted)
@@ -320,7 +322,7 @@ services:
     image: opencti/connector-mitre:6.0.9
     environment:
       - OPENCTI_URL=http://opencti:8080
-      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - OPENCTI_TOKEN=KEYNEEDED
       - CONNECTOR_ID=6edece26-6f92-478a-9ab2-66473b5bef20
       - "CONNECTOR_NAME=MITRE Datasets"
       - CONNECTOR_SCOPE=tool,report,malware,identity,campaign,intrusion-set,attack-pattern,course-of-action,x-mitre-data-source,x-mitre-data-component,x-mitre-matrix,x-mitre-tactic,x-mitre-collection
@@ -337,7 +339,7 @@ services:
     image: opencti/connector-mitre-atlas:6.0.9
     environment:
       - OPENCTI_URL=http://opencti:8080
-      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - OPENCTI_TOKEN=KEYNEEDED
       - CONNECTOR_ID=a906dc51-60bf-43b3-a454-90e92177d88c
       - "CONNECTOR_NAME=MITRE ATLAS"
       - CONNECTOR_SCOPE=identity,attack-pattern,course-of-action,relationship,x-mitre-collection,x-mitre-matrix,x-mitre-tactic
@@ -352,8 +354,8 @@ services:
   connector-opencti:
     image: opencti/connector-opencti:6.0.9
     environment:
-      - OPENCTI_URL=http://opencti:8080/
-      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=KEYNEEDED
       - CONNECTOR_ID=036f0876-2963-418a-8d69-807a5599d627
       - "CONNECTOR_NAME=OpenCTI Datasets"
       - CONNECTOR_SCOPE=marking-definition,identity,location
@@ -373,7 +375,7 @@ services:
     image: opencti/connector-threatfox:6.0.9
     environment:
       - OPENCTI_URL=http://opencti:8080
-      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - OPENCTI_TOKEN=KEYNEEDED
       - CONNECTOR_ID=7cf5049e-4b10-43ec-a38b-af036fee1076
       - "CONNECTOR_NAME=Abuse.ch | ThreatFox"
       - CONNECTOR_SCOPE=ThreatFox
@@ -391,7 +393,7 @@ services:
     image: opencti/connector-urlhaus:6.0.9
     environment:
       - OPENCTI_URL=http://opencti:8080
-      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - OPENCTI_TOKEN=KEYNEEDED
       - CONNECTOR_ID=83aa31f1-ac32-42d1-9d5e-f298a1cb3322
       - "CONNECTOR_NAME=Abuse.ch URLhaus"
       - CONNECTOR_SCOPE=urlhaus
@@ -408,7 +410,7 @@ services:
     image: opencti/connector-urlhaus-recent-payloads:6.0.9
     environment:
       - OPENCTI_URL=http://opencti:8080
-      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - OPENCTI_TOKEN=KEYNEEDED
       - CONNECTOR_ID=95ec6f54-ec05-4589-ab9d-d54777e397c1
       - "CONNECTOR_NAME=URLhaus Recent Payloads"
       - CONNECTOR_CONFIDENCE_LEVEL=50 # From 0 (Unknown) to 100 (Fully trusted)
@@ -430,7 +432,7 @@ services:
     image: opencti/connector-urlscan:6.0.9
     environment:
       - OPENCTI_URL=http://opencti:8080
-      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - OPENCTI_TOKEN=KEYNEEDED
       - CONNECTOR_ID=8386a146-aeb3-4837-95a4-5a6e9cbaabbc
       - CONNECTOR_NAME=Urlscan
       - CONNECTOR_SCOPE=urlscan
@@ -441,7 +443,7 @@ services:
       - CONNECTOR_LABELS=Phishing,Phishfeed
       - CONNECTOR_INTERVAL=86400 # seconds, 1d
       - URLSCAN_URL=https://urlscan.io/api/v1/pro/phishfeed?format=json&q=date:>now-1d
-      - URLSCAN_API_KEY=44b00d7d-6d44-4bd8-9d67-3eadbe0c393f
+      - URLSCAN_API_KEY=${APIKEY-URLSCAN}
     restart: always
     depends_on:
       - opencti
@@ -449,7 +451,7 @@ services:
     image: opencti/connector-vxvault:6.0.9
     environment:
       - OPENCTI_URL=http://opencti:8080
-      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - OPENCTI_TOKEN=KEYNEEDED
       - CONNECTOR_ID=554e2e8d-f583-47ab-b21f-37d3747e4491
       - "CONNECTOR_NAME=VX Vault URL list"
       - CONNECTOR_SCOPE=vxvault
@@ -468,4 +470,3 @@ volumes:
   s3data:
   redisdata:
   amqpdata:
-
