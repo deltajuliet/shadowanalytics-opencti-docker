@@ -1,9 +1,24 @@
 services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - 443:443
+    restart: always
+    volumes:
+      - ./data/nginx:/etc/nginx/conf.d/:ro
+    depends_on:
+      - opencti
+    networks:
+      opencti-net:
+
   redis:
     image: redis:7.2.5
     restart: always
     volumes:
       - redisdata:/data
+    networks:
+      opencti-net:
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
     volumes:
@@ -26,6 +41,9 @@ services:
       nofile:
         soft: 65536
         hard: 65536
+    networks:
+      opencti-net:
+
   minio:
     image: minio/minio:RELEASE.2024-05-28T17-19-04Z # Use "minio/minio:RELEASE.2024-05-28T17-19-04Z-cpuv1" to troubleshoot compatibility issues with CPU
     volumes:
@@ -37,6 +55,9 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}    
     command: server /data
     restart: always
+    networks:
+      opencti-net:
+
   rabbitmq:
     image: rabbitmq:3.13-management
     environment:
@@ -46,6 +67,9 @@ services:
     volumes:
       - amqpdata:/var/lib/rabbitmq
     restart: always
+    networks:
+      opencti-net:
+
   opencti:
     image: opencti/platform:6.2.18
     environment:
@@ -81,6 +105,9 @@ services:
       - minio
       - rabbitmq
     restart: always
+    networks:
+      opencti-net:
+
   worker:
     image: opencti/worker:6.2.18
     environment:
@@ -93,6 +120,9 @@ services:
       mode: replicated
       replicas: 3
     restart: always
+    networks:
+      opencti-net:
+
   connector-export-file-stix:
     image: opencti/connector-export-file-stix:6.2.18
     environment:
@@ -106,6 +136,9 @@ services:
     restart: always
     depends_on:
       - opencti
+    networks:
+      opencti-net:
+
   connector-export-file-csv:
     image: opencti/connector-export-file-csv:6.2.18
     environment:
@@ -119,6 +152,9 @@ services:
     restart: always
     depends_on:
       - opencti
+    networks:
+      opencti-net:
+
   connector-export-file-txt:
     image: opencti/connector-export-file-txt:6.2.18
     environment:
@@ -132,6 +168,9 @@ services:
     restart: always
     depends_on:
       - opencti
+    networks:
+      opencti-net:
+
   connector-import-file-stix:
     image: opencti/connector-import-file-stix:6.2.18
     environment:
@@ -147,6 +186,9 @@ services:
     restart: always
     depends_on:
       - opencti
+    networks:
+      opencti-net:
+
   connector-import-document:
     image: opencti/connector-import-document:6.2.18
     environment:
@@ -165,6 +207,9 @@ services:
     restart: always
     depends_on:
       - opencti
+    networks:
+      opencti-net:
+
   connector-analysis:
     image: opencti/connector-import-document:6.2.18
     environment:
@@ -182,6 +227,8 @@ services:
     restart: always
     depends_on:
       - opencti
+    networks:
+      opencti-net:
 
 volumes:
   esdata:
@@ -189,3 +236,6 @@ volumes:
   redisdata:
   amqpdata:
 
+networks:
+  opencti-net:
+    driver: bridge
